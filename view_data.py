@@ -1,10 +1,12 @@
 import pandas
 import webbrowser
 import os
+import sys
 
 # Read the dataset into a data table using Pandas
 dir = os.path.dirname(__file__)
-data_table = pandas.read_csv("data/human_development.csv")
+filename = sys.argv[1] if len(sys.argv) > 1 else "data/human_development.csv"
+data_table = pandas.read_csv(filename)
 
 # Create a web page view of the data for easy viewing
 html = data_table.to_html()
