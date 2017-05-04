@@ -25,3 +25,26 @@ for file in [files[0]]:
         for i, category in enumerate(categories):
             if category != 'Country':
                 raw_data[country][categories[i]] = values[i]
+
+categories.remove('Country')
+
+# Filter out non-numeric or invalid data
+filtered_data = {}
+for country in raw_data.keys():
+    info = raw_data[country]
+    valid_data = True
+    
+    for category in categories:    
+        if not category in info.keys():
+            valid_data = False
+            break
+        else:
+            value = info[category]
+            try:
+                float(value)
+            except ValueError:
+                valid_data = False
+                break
+
+    if valid_data:
+        filtered_data[country] = raw_data[country]
