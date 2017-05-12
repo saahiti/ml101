@@ -5,38 +5,38 @@ import pandas as pd
 import constants
 
 # Fetch all csv files in directory
-files = []
+filenames = []
 for filename in os.listdir('data/.'):
     if fnmatch.fnmatch(filename, '*.csv'):
-        with open('data/' + filename, 'r') as content_file:
-            content = content_file.read()
-
-            if filename in constants.DATA_FILES:
-                files.append(content)
+        if filename in constants.DATA_FILES:
+            filenames.append(filename)
 
 # Parse file content into dictionary
 features = []
 raw_data = {}
-for file in files:
-    lines = file.splitlines()
-    categories = lines[0].split(',')
-    country_index = categories.index(constants.COUNTRY)
-    if country_index < 0:
-        next
+for filename in filenames:
+    with open('data/' + filename, 'r') as content_file:
+        file = content_file.read()
 
-    for line in lines[1:]:
-        values = line.split(',')
-        country = values[country_index]
+        lines = file.splitlines()
+        categories = lines[0].split(',')
+        country_index = categories.index(constants.COUNTRY)
+        if country_index < 0:
+            next
 
-        if not country in raw_data:
-            raw_data[country] = {}
+        for line in lines[1:]:
+            values = line.split(',')
+            country = values[country_index]
 
-        for i in range(min(len(categories), len(values))):
-            if categories[i] != constants.COUNTRY:
-                raw_data[country][categories[i]] = values[i]
+            if not country in raw_data:
+                raw_data[country] = {}
 
-    categories.remove(constants.COUNTRY)    
-    features.extend(categories)
+            for i in range(min(len(categories), len(values))):
+                if categories[i] != constants.COUNTRY:
+                    raw_data[country][categories[i]] = values[i]
+        
+        categories.remove(constants.COUNTRY)    
+        features.extend(categories)
 
 # Write features to file
 features_file = open('out/features.txt', 'w')
@@ -51,7 +51,6 @@ for country in raw_data.keys():
     
     for feature in features:    
         if not feature in info.keys():
-            print(feature)
             valid_data = False
             break
         else:
@@ -59,11 +58,14 @@ for country in raw_data.keys():
             try:
                 float(value)
             except ValueError:
-                valid_data = False
-                break
+                info[feature] = 0
+                
+    required_key_found = False
+    for key in constants.REQUIRED_KEYS:
+        required_key_found = info[key] or required_key_found
 
-    if valid_data:
-        filtered_data[country] = raw_data[country]
+    if valid_data and required_key_found:
+        filtered_data[country] = info
 
-df = pd.Series(filtered_data, filtered_data.keys())
+df = pd.DataFrame(list(filtered_data.values()))
 df.to_csv('out/filtered_data.csv')
